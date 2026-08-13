@@ -1,0 +1,117 @@
+FIRESTORE SECURITY RULES
+========================
+
+Copy the rules below and paste them into your Firebase Console:
+1. Go to Firebase Console > Your Project > Firestore Database
+2. Click on "Rules" tab
+3. Replace all content with the rules below
+4. Click "Publish"
+
+---
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow authenticated users to read their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    // Contact messages collection rules
+    match /contact_messages/{document=**} {
+      // Allow anyone to create new messages (submit contact form)
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']) 
+                       && request.resource.data.name is string
+                       && request.resource.data.email is string
+                       && request.resource.data.subject is string
+                       && request.resource.data.message is string
+                       && request.resource.data.name.size() > 0
+                       && request.resource.data.email.size() > 0
+                       && request.resource.data.subject.size() > 0
+                       && request.resource.data.message.size() > 0;
+      
+      // Only authenticated admin users can read messages
+      allow read: if request.auth != null && isAdmin(request.auth.uid);
+      
+      // Only authenticated admin users can delete messages
+      allow delete: if request.auth != null && isAdmin(request.auth.uid);
+      
+      // Deny all other operations
+      allow update: if false;
+    }
+  }
+
+  // Helper function to check if user is admin
+  // Configure your admin user IDs in the Firebase Console
+  function isAdmin(userId) {
+    return userId in ['YOUR_ADMIN_UID_HERE'];
+  }
+}
+
+---
+
+IMPORTANT CONFIGURATION STEPS:
+==============================
+
+1. Get your Admin UID:
+   - Go to Firebase Console > Authentication > Users
+   - Find your admin user and copy the UID
+   - Replace 'YOUR_ADMIN_UID_HERE' with your actual UID
+   
+   Example:
+   function isAdmin(userId) {
+     return userId in ['abc123xyz789def456'];
+   }
+
+2. If you want multiple admins:
+   function isAdmin(userId) {
+     return userId in ['admin_uid_1', 'admin_uid_2', 'admin_uid_3'];
+   }
+
+3. Test the rules:
+   - Use Firestore Rules Simulator (in the Rules tab)
+   - Test creating a message as anonymous user (should succeed)
+   - Test reading as anonymous user (should fail)
+   - Test reading as authenticated admin (should succeed)
+
+WHAT THESE RULES DO:
+====================
+
+✓ ALLOW:
+  - Anyone can create new contact form submissions
+  - Admins can read all contact messages
+  - Admins can delete contact messages
+
+✗ DENY:
+  - No one can read contact messages without authentication
+  - No one can modify/update existing messages
+  - No one can delete messages without admin authentication
+
+IMPORTANT SECURITY NOTES:
+=========================
+
+1. Never expose your admin UID or admin credentials in client-side code
+2. The admin authentication happens through Firebase Admin SDK (server-side only)
+3. The contact form submission is public but protected by validation rules
+4. All contact data is encrypted in transit (HTTPS)
+5. Regular backups are handled by Firebase automatically
+
+HOW TO ENABLE FIREBASE AUTHENTICATION FOR ADMIN:
+=================================================
+
+1. In Firebase Console > Authentication:
+   - Enable "Email/Password" sign-in method
+   - Create an admin user account with your email
+   - Copy the UID of this admin account
+
+2. Update the firestore rules with your admin UID
+
+3. Use the admin.html page to log in with your credentials
+
+4. Only after logging in will you see the contact form submissions
+
+For security, you should also:
+- Enable email verification for admin accounts
+- Use strong passwords
+- Consider enabling 2FA if Firebase Console supports it
+- Regularly review who has access to the Firebase project
