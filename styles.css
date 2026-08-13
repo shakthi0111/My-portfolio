@@ -296,8 +296,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .about-text {
-    font-size: 1.1rem;
-    text-align: center;  
+    font-size: 1.1rem;  
     line-height: 1.8;
     color: var(--text-light);
     margin-bottom: 2rem;
