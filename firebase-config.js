@@ -17,7 +17,7 @@ const firebaseConfig = {
     projectId: "shakthi-portfolio-95fe1",
     storageBucket: "https://shakthi-portfolio-95fe1.firebasestorage.app",
     messagingSenderId: "666282654768",
-    appId: "1:666282654768"
+    appId: "1:666282654768:web:8997796607e2880b01c1f5"
 };
 
 // Initialize Firebase
